@@ -1,0 +1,154 @@
+_chroot_branch="foo"
+
+if [ -f /etc/profile ]; then
+    . /etc/profile
+fi
+
+# enable bash completion in interactive shells
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
+
+# Check for an interactive session
+[ -z "$PS1" ] && return
+
+# add autocompletion for sudo
+complete -cf sudo
+
+shopt -s cdspell          	# autocorrects cd misspellings
+shopt -s checkwinsize     	# update the value of LINES and COLUMNS after each command if altered
+shopt -s cmdhist          	# save multi-line commands in history as single line
+shopt -s dotglob          	# include dotfiles in pathname expansion
+shopt -s expand_aliases   	# expand aliases
+shopt -s extglob          	# enable extended pattern-matching features
+shopt -s histappend       	# append to (not overwrite) the history file
+shopt -s hostcomplete     	# attempt hostname expansion when @ is at the beginning of a word
+shopt -s nocaseglob       	# pathname expansion will be treated as case-insensitive
+
+# exports
+export HISTSIZE=10000           # bash history will save N commands
+export HISTFILESIZE=${HISTSIZE} # bash will remember N commands
+export HISTCONTROL=ignoreboth   # ingore duplicates and spaces (ignoreboth, ignoredups, ignorespace)
+
+#
+## aliases
+#
+
+# ls
+alias ls='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias ll='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias la='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias l1='ls -1 --group-directories-first --color=auto -F'
+alias l='ls'
+
+# util
+alias c='clear'
+alias e='exit'
+alias d='cd'
+alias grep='grep --color=tty -d skip'
+alias cp="cp -i"                          # confirm before overwriting something
+alias df='df -h'                          # human-readable sizes
+alias free='free -m'                      # show sizes in MB
+alias checkip='wget http://checkip.dyndns.org/ -O - -o /dev/null | cut -d: -f 2 | cut -d\< -f 1'
+alias vi=vim
+
+# packaging
+alias pacman='sudo pacman'
+alias vp='vim PKGBUILD'
+alias vs='vim SPLITBUILD'
+alias makepkg='echo "do not use /usr/bin/makepkg from chroot, use \"cd \$pkg; ../makepkg\" or \"./build.sh <list>\" instead."'
+alias :m='../makepkg -i'
+alias :mo='../makepkg -o'
+alias :cm=':cp && :m'
+alias :cp='rm -rf pkg src dbg hdr log logpipe* *.log.* *.log *.pkg.*'
+alias :s='ls _repo/local && sleep 5 && ./sync-complete.sh'
+alias :su='ls _repo/local && sleep 20 && ./sync-up.sh'
+alias :sd='./sync-down.sh'
+alias :u='sudo pacman -Syu'
+alias :i='sudo pacman -S'
+alias :inst='pacman -S *.pkg.*z'
+
+c-compile ()
+{
+  PACKAGE_LIST=""
+
+  for i in $*
+  do
+    cd $1
+    ../makepkg -frs --holdver --noconfirm --sign
+    sudo rm -rf pkg src dbg hdr log logpipe* *.log.* *.log *.pkg.*
+    cd ..
+  done
+}
+
+c-install ()
+{
+  PACKAGE_LIST=""
+
+  for i in $*
+  do
+    PACKAGE_LIST=$PACKAGE_LIST" ./_repo/local/$i*.pkg.tar.xz"
+  done
+
+  sudo pacman -U --noconfirm $PACKAGE_LIST
+}
+
+rmpkg()
+{
+  for i in $*
+  do
+    pkg=${i%/*}
+    if [[ -n "$(find "/chakra/${_chroot_branch}/_repo/local/" -name "${pkg}-*.pkg.tar.xz" -print -quit)" ]]
+    then
+      rm "/chakra/${_chroot_branch}/_repo/local/"${pkg}-*.pkg.tar.xz
+      repo-remove "/chakra/${_chroot_branch}/_repo/local/local-${_chroot_branch}.db.tar" $pkg >/dev/null
+    fi
+  done
+}
+
+# git
+alias :gc='git commit -a'
+alias :gp='git pull'
+alias :g='git push'
+alias :start='git status && git pull && sudo pacman -Sc --noconfirm && sudo pacman -Syu --noconfirm'
+
+
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+
+
+# ex - archive extractor
+ex ()
+{
+    if [ -f $1 ] ; then
+        case $1 in
+            *.cb)        unsquashfs $1 ;;
+            *.sqfs)      unsquashfs $1 ;;
+            *.lz)        unsquashfs $1 ;;
+            *.lzma)      unsquashfs $1 ;;
+            *.tar.bz2)   tar xjf $1    ;;
+            *.tar.gz)    tar xzf $1    ;;
+            *.tar.xz)    tar xJf $1    ;;
+            *.bz2)       bunzip2 $1    ;;
+            *.rar)       unrar x $1    ;;
+            *.gz)        gunzip $1     ;;
+            *.tar)       tar xf $1     ;;
+            *.tbz2)      tar xjf $1    ;;
+            *.tgz)       tar xzf $1    ;;
+            *.zip)       unzip $1      ;;
+            *.Z)         uncompress $1 ;;
+            *.7z)        7z x $1       ;;
+            *)           echo "'$1' cannot be extracted via ex()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+export EDITOR=vim
+export VISUAL=vim
+
+PS1="\[\e[31;1m\]\u@[chroot]:\w$ \[\e[0m\]"

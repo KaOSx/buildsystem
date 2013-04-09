@@ -1,0 +1,45 @@
+#!/bin/bash
+
+_check_conf_files="${_cur_repo}-${_arch}-cfg.conf ${_cur_repo}-${_arch}-makepkg.conf user.conf"
+_load_conf_files="${_cur_repo}-${_arch}-cfg.conf ${_cur_repo}-${_arch}-makepkg.conf user.conf"
+
+check_configs() {
+    msg "Checking configs"
+
+    for _conf in ${_check_conf_files} ; do
+        status_start "${_conf}"
+
+        if [ -e "_buildscripts/${_conf}" ] ; then
+            status_ok
+        else
+            status_fail
+            error "${_conf} not available. Exiting..."
+            newline
+            exit 1
+        fi
+    done
+}
+
+load_configs() {
+    msg "Loading configs"
+
+    local ret=0
+
+    for _conf in ${_load_conf_files} ; do
+        source _buildscripts/${_conf} 2>&1 || ret=$?
+
+        if [ ${ret} -gt 0 ]; then
+            status_fail
+            error "Sourcing ${_conf} failed. Exiting..."
+            newline
+            exit 1
+        fi
+    done
+
+    if [ "${_cur_repo}" != "" ] ; then
+        . "_buildscripts/${_cur_repo%-*}-${_arch}-pkgs.conf"
+    else
+        error "no repo specified!!!"
+        exit 1
+    fi
+}

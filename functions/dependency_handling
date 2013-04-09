@@ -1,0 +1,44 @@
+
+check_deps() {
+    [ $# -gt 0 ] || return
+
+    pmout=$(pacman $PACMAN_OPTS -T "$@")
+    ret=$?
+    if [ ${ret} -eq 127 ] ; then #unresolved deps
+        echo "${pmout}"
+    elif [ ${ret} -ne 0 ] ; then
+        error "Pacman returned a fatal error (%i): %s" "${ret}" "${pmout}"
+        exit 1
+    fi
+}
+
+resolve_deps() {
+    local R_DEPS_SATISFIED=0
+    local R_DEPS_MISSING=1
+
+    local deplist="$(check_deps $*)"
+
+    echo ${deplist}
+}
+
+do_makedeps() {
+    source *BUILD
+    MISSING_MAKEDEPS=$(resolve_deps ${makedepends[@]})
+    if [ -z "$MISSING_MAKEDEPS" ]; then
+        msg "All makedepends seem to be installed!"
+    else
+        msg "Installing missing makedepends: $MISSING_MAKEDEPS"
+        sudo pacman -Sy $MISSING_MAKEDEPS --noconfirm &>/dev/null
+    fi
+}
+
+do_deps() {
+    source *BUILD
+    MISSING_DEPS=$(resolve_deps ${depends[@]})
+    if [ -z "$MISSING_DEPS" ]; then
+        msg "All depends seem to be installed!"
+    else
+        msg "Installing missing depends: $MISSING_DEPS"
+        sudo pacman -Sy $MISSING_DEPS --noconfirm &>/dev/null
+    fi
+}

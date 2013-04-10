@@ -59,11 +59,11 @@ if [ "${REPO}" == "chakra-live" ] ; then
 fi
 
 # Remote paths
-PKGSOURCE="http://chakra-project.org/repo"
-BUILDSYS_BASE="git://gitorious.org/chakra-packages"
+PKGSOURCE="http://veritasfarm.net/repo"
+BUILDSYS_BASE="git://github.com/abveritas"
 GIT_BUILDSYS="${BUILDSYS_BASE}/buildsystem.git"
-PKGS_BASE="git@gitorious.org:chakra-packages"
-PKGS_BASE_N="git://gitorious.org/chakra-packages"
+PKGS_BASE="https://github.com/abveritas"
+PKGS_BASE_N="git://github.com/abveritas"
 CL_BASE="git@gitorious.org:chakra"
 CL_BASE_N="git://gitorious.org/chakra"
 
@@ -122,19 +122,6 @@ status_ok() {
 
 status_done() {
     echo -e "\033[1;32m DONE \033[1;0m"
-}
-
-banner() {
-    newline
-    printf '\e[1;36m'
-    echo "  .,-:::::   ::   .:   :::.      :::  .   :::::::..    :::.     "
-    echo ",;;;'\`\`\`\`'  ,;;   ;;,  ;;\`;;     ;;; .;;,.;;;;\`\`;;;;   ;;\`;;    "
-    echo "[[[        ,[[[,,,[[[ ,[[ '[[,   [[[[[/'   [[[,/[[['  ,[[ '[[,  "
-    echo " \$\$\$       \"\$\$\$\"\"\"\$\$\$c\$\$\$cc\$\$\$c _\$\$\$\$,     $\$\$\$\$\$c   c\$\$\$cc\$\$\$c "
-    echo "\`88bo,__,o, 888   \"88o888   888,\"888\"88o,  888b \"88bo,888   888,"
-    echo "   YUMMMMMP\"MMM    YMMYMM   \"\"\`  MMM \"MMP\" MMMM   \"W\" YMM   \"\"\` "
-    printf '\e[0m'
-    newline
 }
 
 #
@@ -242,7 +229,7 @@ create_pacmanconf() {
     msg "creating ${PM_CONF}"
 
     # fetch pacman.conf from git
-    wget -qO "${BASEPATH}/${PM_CONF}" "http://gitorious.org/chakra-packages/buildsystem/blobs/raw/master/skel/pacman.conf"
+    wget -qO "${BASEPATH}/${PM_CONF}" "http://github.com/abveritas/buildsystem/blobs/raw/master/skel/pacman.conf"
 
     sed -ri "s,@arch@,${CARCH}," "${BASEPATH}/${PM_CONF}"
 

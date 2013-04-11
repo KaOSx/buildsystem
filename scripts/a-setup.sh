@@ -1,21 +1,18 @@
 #!/bin/bash
 #
-# a-Setup.sh, an automatic buildsystem setup for Chakra GNU/Linux
+# a-Setup.sh, an automatic buildsystem forked from Chakra GNU/Linux
 #
 # Copyright (c) 2010-2013 - Originally developed by Jan Mette
 #
-#                       Contributors, alphabetically sorted:
+#                       Contributors:
 #
-#                       Adrián Chaves Fernández <gallaecio[at]chakra-project[dot]org
-#                       Drake Justice <djustice[at]chakra-project[dot]org
-#                       Manuel Tortosa <manutortosa[at]chakra-project[dot]org
-#                       Phil Miller <philm[at]chakra-project[dot]org
+#                       Chakra GNU/Linux developers
 #
 #
 # GPL
 
 # version
-VER="0.7.9"
+VER="0.8.0"
 
 # local root name (safe to change)
 BASENAME="buildroot"
@@ -134,11 +131,11 @@ if [ ! -e "/usr/bin/git" ] ; then
     exit
 fi
 
-if [ -e "/etc/chakra-release" ] ; then
-    CHAK_VER="$(cat /etc/chakra-release)"
-    echo ":: running on Chakra linux: ${CHAK_VER}"
+if [ -e "/etc/KdeOs-release" ] ; then
+    CHAK_VER="$(cat /etc/KdeOs-release)"
+    echo ":: running on KdeOs linux: ${CHAK_VER}"
     unset CHAK_VER
-    DISTRO="chakra"
+    DISTRO="KdeOs"
 else
     echo ":: running on a unsupported linux distro"
     echo ":: (everything could happen from here...)"

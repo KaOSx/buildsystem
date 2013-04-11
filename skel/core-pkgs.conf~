@@ -1,0 +1,300 @@
+#
+# Chakra Linux Buildscript Config file
+#
+# Core v.0.09.1
+# by Phil Miller
+#
+# These are the building "groups" or "package lists"
+# (or stages"). Every group must be prefixed with
+# "_build_" followed by the repo name_branch
+# and finally a identifier like "support".
+#
+# You can create/delete/modify groups as you like,
+# the buildscripts will detect all changes like
+# new/deleted groups automatically and offer them
+# in their options
+
+
+# notes:
+#   -- new architectures, toolchain group first
+#   -- be careful at rebuild lines, you probably missed something ;)
+
+
+_build_core_all="linux-api-headers glibc binutils libelf gcc acl apr apr-util ar9170-fw attr autoconf automake b43-fwcutter bash bc bin86 bison boost bridge-utils broadcom-wl bzip2 ca-certificates cloog-ppl cmake coreutils cpio cracklib crda cryptsetup curl db dbus-core dcron dhcpcd dialog diffutils dmraid dnsutils e2fsprogs ed eventlog expat fakeroot file filesystem findutils flex gawk gdbm gen-init-cpio gettext glib2 gmp gnupg gnutls gobject-introspection gperf gpm grep grub gzip hdparm heimdal ifenslave inetutils initscripts intltool iproute2 iptables iputils ipw2100-fw ipw2200-fw isdn4k-utils iw iwlwifi-1000-ucode iwlwifi-3945-ucode iwlwifi-4965-ucode iwlwifi-5000-ucode iwlwifi-5150-ucode iwlwifi-6000-ucode jfsutils kbd kernel26 less libarchive libcap libcroco libevent libfetch libffi libgcrypt libgpg-error libgssglue libldap libmpc libnl libpcap librpcsecgss libsasl libtasn1 libtirpc libtool libusb libusb-compat libxml2 libxslt licenses links linux-atm logrotate lvm2 lzo2 m4 mailx make man-pages mdadm mkinitcpio mkinitcpio-busybox mkinitcpio-nfs-utils mlocate module-init-tools mpfr nano ncurses ndiswrapper ndiswrapper-utils neon net-tools nfs-utils nfsidmap openssh openssl libssh libssh2 openvpn pacman pacman-mirrorlist pam patch pciutils pcmciautils pcre perl perlxml perl-error git pkgconfig popt ppl ppp pptpclient procinfo procps psmisc python python-m2crypto readline reiserfsprogs repo-clean rfkill rp-pppoe rpcbind rsync rt2870usb-fw rt2x00-rt61-fw rt2x00-rt71w-fw ruby run-parts sdparm sed shadow shared-mime-info sqlite3 subversion sudo swig sysfsutils syslog-ng sysvinit tar tcp_wrappers texinfo tiacx tiacx-firmware tzdata udev unixodbc usbutils util-linux-ng vpnc wget which wireless-regdb wireless_tools wpa_actiond wpa_supplicant xfsprogs xinetd xz-utils zd1211-firmware zlib"
+
+_build_core_toolchain="linux-api-headers binutils ppl cloog-ppl mpfr libmpc elfutils gcc glibc binutils gcc glibc"
+
+_build_core_networking="ar9170-fw b43-fwcutter bridge-utils broadcom-wl crda curl dhcpcd dnsutils heimdal libtirpc ifenslave inetutils iproute2 iptables iputils ipw2100-fw ipw2200-fw iw iwlwifi-1000-ucode iwlwifi-3945-ucode iwlwifi-4965-ucode iwlwifi-5000-ucode iwlwifi-5150-ucode iwlwifi-6000-ucode libcap mkinitcpio-nfs-utils ndiswrapper ndiswrapper-utils neon net-tools nfs-utils nfsidmap openssh openssl libssh libssh2 openvpn pacman pacman-mirrorlist ppp pptpclient repo-clean rfkill rp-pppoe rpcbind rsync rt2870usb-fw rt2x00-rt61-fw rt2x00-rt71w-fw subversion tiacx tiacx-firmware tcp_wrappers vpnc wget wireless-regdb wireless_tools wpa_actiond wpa_supplicant xinetd zd1211-firmware"
+
+_build_core_wireless="ar9170-fw b43-fwcutter broadcom-wl ipw2100-fw ipw2200-fw iw iwlwifi-1000-ucode iwlwifi-3945-ucode iwlwifi-4965-ucode iwlwifi-5000-ucode iwlwifi-5150-ucode iwlwifi-6000-ucode ndiswrapper ndiswrapper-utils rt2870usb-fw rt2x00-rt61-fw rt2x00-rt71w-fw tiacx tiacx-firmware wireless-regdb wireless_tools wpa_actiond wpa_supplicant zd1211-firmware"
+
+_build_core_heimdal="heimdal libtirpc nfs-utils openssh"
+
+_build_core_openssl="openssl libssh libssh2 curl dnsutils heimdal libarchive libfetch libldap links openssh openvpn python python-m2crypto ruby syslog-ng vpnc wget wpa_supplicant"
+
+_build_core_perl="perl perlxml perl-error git"
+
+_build_core_python="python python-m2crypto"
+
+_build_core_kernel26="kernel26 aufs2 broadcom-wl ndiswrapper tiacx vhba-module"
+
+_build_core_kernel26needed="aufs2 broadcom-wl ndiswrapper tiacx vhba-module"
+
+_build_core_any="autoconf
+automake
+ca-certificates
+chakra-live
+chakra-signatures
+dejagnu
+docbook-xml
+docbook-xsl
+filesystem
+grub2-efi-x86_64
+iana-etc
+intltool
+ipw2100-fw
+ipw2200-fw
+libunistring
+licenses
+linux-firmware
+man-pages
+mkinitcpio-testing
+mkinitcpio
+perl-test-pod
+perl-xml-namesupport
+perl-xml-sax
+tiacx-firmware
+wireless-regdb
+zd1211-firmware"
+
+_build_core_allnotoolchain="bzip2 
+zlib 
+icu 
+libtool 
+tcl 
+expect 
+dejagnu 
+gmp 
+guile 
+autogen 
+tzdata 
+readline 
+util-linux-ng 
+udev  
+tiacx-firmware
+b43-fwcutter 
+linux-firmware 
+ncurses
+boost 
+repo-clean
+db 
+gdbm 
+e2fsprogs 
+attr 
+acl 
+apr 
+libcap 
+openssl
+libssh
+libssh2
+bash 
+run-parts 
+findutils 
+coreutils 
+sed 
+ca-certificates 
+heimdal 
+libsasl 
+pam 
+libldap 
+expat 
+unixodbc 
+apr-util 
+neon 
+cvs 
+curl 
+librpcsecgss 
+libtirpc
+tk
+perl 
+python 
+python-m2crypto
+ruby
+filesystem 
+dbus-core 
+libnl 
+libarchive
+file  
+pcre 
+gzip 
+which
+docbook2x 
+module-init-tools 
+gen-init-cpio 
+mkinitcpio-busybox 
+mkinitcpio-nfs-utils 
+mkinitcpio
+iw
+wireless-regdb
+libffi
+swig
+docbook-xml
+docbook-xsl
+perl-yaml-syck  
+perl-test-pod
+xmlto
+kernel26
+tiacx
+vhba-module
+ autoconf     
+ automake    
+ bc  
+ bdf-unifont  
+ bin86   
+ bison   
+ bridge-utils
+ bzr         
+ burg-bzr   
+ burg-emu  
+ burg-themes     
+ chakra-signatures   
+ cmake   
+ cpio   
+ cracklib   
+ crda   
+ cryptsetup          
+ dbus-core-systemd  
+ dcron      
+ dhcpcd   
+ dialog
+ diffutils
+ dmraid  
+ dnsutils        
+ ed    
+ eventlog       
+ fakeroot    
+ flex   
+ freetype2  
+ gawk       
+ gettext  
+ git  
+ glib2 
+ gnupg
+ gnutls 
+ gobject-introspection 
+ gperf   
+ gpm 
+ grep  
+ help2man
+ efibootmgr 
+ grub2   
+ grub2-efi-x86_64   
+ hdparm     
+ iana-etc 
+ iasl  
+ ifenslave 
+ inetutils 
+ initscripts 
+ intltool 
+ iproute2  
+ iptables   
+ iputils 
+ ipw2100-fw 
+ ipw2200-fw  
+ isdn4k-utils
+ isl  
+ isl3890-firmware   
+ jfsutils  
+ kbd    
+ keyutils   
+ krb5  
+ less    
+ libevent 
+ libfetch     
+ libgcrypt  
+ libgpg-error
+ libgssglue      
+ libpcap
+ libcroco  
+ libpipeline     
+ libtasn1     
+ libusb 
+ libusb-compat
+ libxml2 
+ libxslt  
+ licenses  
+ links  
+ linux-atm  
+ logrotate 
+ lsb-release  
+ lvm2 
+ lzo2  
+ m4 
+ mailx 
+ make
+ man-pages   
+ mdadm  
+ mlocate     
+ nano         
+ ndiswrapper-utils 
+ ndiswrapper    
+ net-tools 
+ nettle 
+ nfs-utils  
+ nfsidmap 
+ openssh    
+ openvpn  
+ pacman 
+ pacman-mirrorlist   
+ patch
+ patchutils
+ pciutils  
+ pcmciautils   
+ perl-error
+ perl-xml-namesupport 
+ perl-xml-sax  
+ perlxml  
+ perlxml   
+ pkgconfig
+ pmtools  
+ popt    
+ ppp  
+ pptpclient  
+ procinfo-ng 
+ procps 
+ psmisc      
+ reiserfsprogs    
+ rfkill  
+ rp-pppoe 
+ rpcbind  
+ rsync   
+ sdparm   
+ shadow  
+ shared-mime-info  
+ sqlite3     
+ squashfs-tools   
+ subversion   
+ sudo   
+ sysfsutils 
+ syslog-ng   
+ sysvinit  
+ tar 
+ tcp_wrappers  
+ texinfo        
+ usbutils    
+ v86d  
+ vi   
+ vpnc 
+ wget 
+ wireless_tools
+ wpa_actiond  
+ wpa_supplicant 
+ xfsprogs  
+ xinetd 
+ xz
+ zd1211-firmware 
+ aufs2-util
+ acpi_call 
+ broadcom-wl"
+
+_build_core_krb5="libgssglue krb5 libtirpc librpcsecgss nfs-utils openssh cvs neon subversion"

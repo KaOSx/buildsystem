@@ -1,0 +1,120 @@
+#!/bin/sh
+#
+#  Fakeuname - fakes the uname system value
+#
+#  usage example:  ../fakeuname -r 2.6.33-CHAKRA ../makepkg
+#
+
+uname=$(which uname)
+
+dir=$(mktemp -d --tmpdir uname.XXXXXXXX)
+
+kernel=$($uname -s)
+nodename=$($uname -n)
+kernel_rel=$($uname -r)
+kernel_ver=$($uname -v)
+machine=$($uname -m)
+processor=$($uname -p)
+hw=$($uname -i)
+os=$($uname -o)
+
+# print usage
+usage() {
+    echo "Usage: $( basename "$0" ) [options] [ -- ] command"
+    echo "Options:"
+    echo "    -s kernel-name"
+    echo "    -n nodename"
+    echo "    -r kernel-release"
+    echo "    -v kernel-version"
+    echo "    -m machine"
+    echo "    -p processor"
+    echo "    -i hardware-platform"
+    echo "    -o operating-system"
+    exit 0
+}
+
+cleanup() {
+    rm -rf -- "$dir"
+}
+
+
+# always clean up temporary folder
+trap 'cleanup' EXIT TERM HUP QUIT INT
+
+[ $# -eq 0 ] && usage
+
+current=""
+for arg in "$@"; do
+    case "$arg" in
+        -s|--kernel-name)       shift ; current=kernel     ;;
+        -n|--nodename)          shift ; current=nodename   ;;
+        -r|--kernel-release)    shift ; current=kernel_rel ;;
+        -v|--kernel-version)    shift ; current=kernel_ver ;;
+        -m|--machine)           shift ; current=machine    ;;
+        -p|--processor)         shift ; current=processor  ;;
+        -i|--hardware-platform) shift ; current=hw         ;;
+        -o|--operating-system)  shift ; current=os         ;;
+        --) shift ; break ;;
+        -*) echo -e >&2 "$( basename "$0" ): Invalid option \`$arg' found\n" && usage ;;
+        *) [ -n "$current" ] && eval "$current='$arg'" && current="" && shift || break ;;
+    esac
+done
+
+for arg in "$@"; do
+    cmd="$cmd '$arg'"
+done
+
+# write uname file
+cat > "$dir/uname" <<EOF
+#!/bin/sh
+
+uname_output() {
+    $uname "\$1";
+    exit \$?
+}
+
+for arg in "\$@"; do
+    if [ "\${arg:0:1}" = "-" ]; then
+        case "\$arg" in
+            --help) uname_output "\$arg" ;;
+            --version) uname_output "\$arg" ;;
+            -a|--all)
+                echo "$kernel $nodename $kernel_rel $kernel_ver $machine $processor $hw $os"
+                exit \$? ;;
+            -s|--kernel-name) ;;
+            -n|--nodename) ;;
+            -r|--kernel-release) ;;
+            -v|--kernel-version) ;;
+            -m|--machine) ;;
+            -p|--processor) ;;
+            -i|--hardware-platform) ;;
+            -o|--operating-system) ;;
+            *) uname_output "\$arg" ;;
+        esac
+    else
+        uname_output "\$arg"
+    fi
+done
+
+for arg in "\$@"; do
+    case "\$arg" in
+        -s|--kernel-name) echo -n "$kernel";;
+        -n|--nodename) echo -n "$nodename";;
+        -r|--kernel-release) echo -n "$kernel_rel";;
+        -v|--kernel-version) echo -n "$kernel_ver";;
+        -m|--machine) echo -n "$machine";;
+        -p|--processor) echo -n "$processor";;
+        -i|--hardware-platform) echo -n "$hw";;
+        -o|--operating-system) echo -n "$os";;
+    esac
+done
+
+# new line
+echo
+
+EOF
+
+chmod a+x "$dir/uname"
+export PATH="$dir/:$PATH"
+
+eval $cmd

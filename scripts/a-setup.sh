@@ -31,25 +31,9 @@ COMMITMODE="${4}"
 USERID="$(getent passwd "${USER}" | cut -d: -f3)"
 
 # Pkgs to install
-if [[ "$BRANCH" == "testing" ]]; then
-    INSTALLPKGS=('device-mapper' 'filesystem' 'lvm2' 'pcmciautils' 'attr' 'bash'
-                 'binutils' 'bzip2' 'chakra-signatures' 'coreutils' 'cryptsetup' 'dcron'
-                 'device-mapper' 'dhcpcd' 'diffutils' 'e2fsprogs' 'file' 'filesystem'
-                 'findutils' 'gawk' 'gcc-libs' 'gen-init-cpio' 'gettext' 'glibc' 'grep'
-                 'gzip' 'iputils' 'jfsutils' 'less' 'libpipeline' 'licenses'
-                 'linux' 'logrotate' 'lvm2' 'mailx' 'man-pages' 'mdadm' 'nano' 'net-tools'
-                 'pacman' 'pacman-mirrorlist' 'pciutils' 'pcmciautils' 'perl'
-		 'ppp' 'procps-ng'
-                 'psmisc' 'reiserfsprogs' 'rp-pppoe' 'sed' 'shadow' 'sysfsutils' 'syslog-ng'
-                 'systemd' 'tar' 'tcp_wrappers' 'texinfo' 'usbutils' 'util-linux' 'vi' 'wget'
-                 'which' 'wpa_supplicant' 'xfsprogs' 'base-devel' 'cmake' 'openssh' 'git' 'sudo'
-                 'boost' 'vim' 'rsync' 'repo-clean' 'squashfs-tools' 'curl' 'libusb-compat'
-                 'gnupg' 'cdrkit' 'bash-completion')
-else
     INSTALLPKGS=('base' 'base-devel' 'cmake' 'openssh' 'git' 'sudo' 'boost' 'vim'
                  'rsync' 'repo-clean' 'squashfs-tools' 'curl' 'libusb-compat'
                  'gnupg' 'cdrkit' 'bash-completion')
-fi
 
 if [ "${REPO}" == "chakra-live" ] ; then
     INSTALLPKGS+=('syslinux' 'nbd' 'mkinitcpio-nfs-utils')
@@ -179,7 +163,7 @@ umount_special() {
 check_repos() {
     msg "checking repos"
     unset CHECKTR
-    CHECKTR="$(curl --silent http://chakra-project.org/packages/check-repos.php)"
+    CHECKTR="$(curl --silent http://veritasfarm.net/packages/check-repos.php)"
     if [ "$(echo "${CHECKTR}" | cut -d+ -f1)" = 'ok' ] ; then
 	if [ -z "${REPO}" ] ; then 
 	    newline
@@ -226,7 +210,7 @@ create_pacmanconf() {
     msg "creating ${PM_CONF}"
 
     # fetch pacman.conf from git
-    wget -qO "${BASEPATH}/${PM_CONF}" "http://github.com/abveritas/buildsystem/blobs/raw/master/skel/pacman.conf"
+    wget -qO "${BASEPATH}/${PM_CONF}" "https://github.com/abveritas/buildsystem/raw/master/skel/pacman.conf"
 
     sed -ri "s,@arch@,${CARCH}," "${BASEPATH}/${PM_CONF}"
 
@@ -826,7 +810,7 @@ all_done() {
 # startup
 #
 clear
-banner
+
 title "Chakra Packager's and ISO creators Chroot Setup Script v${VER}"
 
 # ensure we are not running as root
@@ -910,7 +894,7 @@ else
     REPO_NAME="${REPO}-${BRANCH}"
 fi
 CHROOT="${BASEPATH}/_chroots/$BRANCH-${ARCH}"
-CHAKRAFOLDER="chakra"
+CHAKRAFOLDER="buildsys"
 CHAKRADIR="${CHROOT}/${CHAKRAFOLDER}"
 REPODIR="${CHAKRADIR}/${REPO_NAME}"
 

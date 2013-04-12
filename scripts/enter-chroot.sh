@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# Chakra Enter-Chroot Script
+# Enter-Chroot Script
 #    to handle mounting/unmounting special directories
 #    and extra sanity checks
 #
 
 # version
-VER="1.0"
+VER="1.1"
 
 # global vars
 
@@ -39,10 +39,10 @@ fi
 
 # don't forget which chroot you are entering.. ;)
 clear
-msg "Chakra Packager's Enter Chroot Script v$VER"
+msg "Packager's Enter Chroot Script v$VER"
 msg "Entering chroot..."
 sleep 1
-msg "Repository: ${_chroot} (${_chroot_branch})" # Example: apps-i686 (apps)
+msg "Repository: ${_chroot} (${_chroot_branch})" # Example: apps-x86_64 (apps)
 sleep 1
 msg "User: ${_user}"
 sleep 2
@@ -51,15 +51,15 @@ if [ -d ${_chroot} ] ; then
     sed -i -e s,#PKGDEST,PKGDEST,g _buildscripts/${_chroot}-makepkg.conf
     sed -i -e s,#SRCDEST,SRCDEST,g _buildscripts/${_chroot}-makepkg.conf
     sed -i -e s,#PACKAGER,PACKAGER,g _buildscripts/${_chroot}-makepkg.conf
-    sed -i -e s,SRCDEST.*,SRCDEST=\"/chakra/${_chroot_branch}/_sources\",g _buildscripts/${_chroot}-makepkg.conf
+    sed -i -e s,SRCDEST.*,SRCDEST=\"/buildsys/${_chroot_branch}/_sources\",g _buildscripts/${_chroot}-makepkg.conf
     sed -i -e s,PACKAGER.*,PACKAGER="\"$_packer\"",g _buildscripts/${_chroot}-makepkg.conf
-    sed -i -e s#_build_work.*#_build_work=\"/chakra/${_chroot_branch}/\"#g _buildscripts/${_chroot}-cfg.conf
+    sed -i -e s#_build_work.*#_build_work=\"/buildsys/${_chroot_branch}/\"#g _buildscripts/${_chroot}-cfg.conf
     sed -i -e s,"_chroot_branch=".*,"_chroot_branch=\"${_chroot_branch}\"",g ${_chroot}/chroot/home/${_user}/.bashrc
-    sed -i -e s,"cd /chakra/".*,"cd /chakra/${_chroot_branch}/",g ${_chroot}/chroot/home/${_user}/.bashrc
+    sed -i -e s,"cd /buildsys/".*,"cd /buildsys/${_chroot_branch}/",g ${_chroot}/chroot/home/${_user}/.bashrc
     if [[ "${_chroot}" = bundles* ]] ; then
-	sed -i -e s,PKGDEST.*,PKGDEST=\"/chakra/${_chroot_branch}/_temp\",g _buildscripts/${_chroot}-makepkg.conf
+	sed -i -e s,PKGDEST.*,PKGDEST=\"/buildsys/${_chroot_branch}/_temp\",g _buildscripts/${_chroot}-makepkg.conf
     else
-	sed -i -e s,PKGDEST.*,PKGDEST=\"/chakra/${_chroot_branch}/_repo/local\",g _buildscripts/${_chroot}-makepkg.conf
+	sed -i -e s,PKGDEST.*,PKGDEST=\"/buildsys/${_chroot_branch}/_repo/local\",g _buildscripts/${_chroot}-makepkg.conf
     fi
 
     source _buildscripts/${_chroot}-cfg.conf
@@ -110,10 +110,10 @@ if [ -d ${_chroot} ] ; then
     fi
 
 
-    sudo mount _buildscripts/ ${_chroot}/chroot/chakra/${_chroot_branch}/_buildscripts --bind &>/dev/null
-    sudo mount _sources/ ${_chroot}/chroot/chakra/${_chroot_branch}/_sources --bind &>/dev/null
-    sudo mount _testing-${_carch}/ ${_chroot}/chroot/chakra/${_chroot_branch}/_testing-${_carch} --bind &>/dev/null
-    sudo mount _unstable-${_carch}/ ${_chroot}/chroot/chakra/${_chroot_branch}/_unstable-${_carch} --bind &>/dev/null
+    sudo mount _buildscripts/ ${_chroot}/chroot/buildsys/${_chroot_branch}/_buildscripts --bind &>/dev/null
+    sudo mount _sources/ ${_chroot}/chroot/buildsys/${_chroot_branch}/_sources --bind &>/dev/null
+    sudo mount _testing-${_carch}/ ${_chroot}/chroot/buildsys/${_chroot_branch}/_testing-${_carch} --bind &>/dev/null
+    sudo mount _unstable-${_carch}/ ${_chroot}/chroot/buildsys/${_chroot_branch}/_unstable-${_carch} --bind &>/dev/null
     sudo cp -f /etc/mtab ${_chroot}/chroot/etc/mtab &>/dev/null
     sudo cp -f /etc/resolv.conf ${_chroot}/chroot/etc/resolv.conf &>/dev/null
 
@@ -125,9 +125,9 @@ if [ -d ${_chroot} ] ; then
     for __chroot in ${_chroots}; do
         __chroot_name=`echo ${__chroot} | sed "s/-i686//g" | sed "s/-x86_64//g"`
         sudo umount -v ${__chroot}/chroot/{dev/shm,dev/pts,dev,sys,proc,var/cache/pacman/pkg} &>/dev/null
-        sudo umount -v ${__chroot}/chroot/chakra/${__chroot_name}/{_buildscripts,_sources} &>/dev/null
-	sudo umount -v ${__chroot}/chroot/chakra/${__chroot_name}/_testing-${_carch} &>/dev/null
-	sudo umount -v ${__chroot}/chroot/chakra/${__chroot_name}/_unstable-${_carch} &>/dev/null
+        sudo umount -v ${__chroot}/chroot/buildsys/${__chroot_name}/{_buildscripts,_sources} &>/dev/null
+	sudo umount -v ${__chroot}/chroot/buildsys/${__chroot_name}/_testing-${_carch} &>/dev/null
+	sudo umount -v ${__chroot}/chroot/buildsys/${__chroot_name}/_unstable-${_carch} &>/dev/null
     done
 
 else

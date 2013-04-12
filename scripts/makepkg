@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 #
 #   makepkg - make packages compatible for use with pacman
 #   Generated from makepkg.sh.in; do not edit by hand.
@@ -46,6 +46,7 @@ declare -r confdir='../_buildscripts'
 declare -r BUILDSCRIPT='PKGBUILD'
 declare -r startdir="$PWD"
 
+ARCH="$_arch"
 current_repo=`pushd $startdir &>/dev/null; pushd .. &>/dev/null; pwd | awk -F '/' '{print $NF}'; popd &>/dev/null; popd &>/dev/null`
 confdir='../_buildscripts'
 conffile="${current_repo}-${ARCH}-makepkg.conf"

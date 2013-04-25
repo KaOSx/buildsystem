@@ -35,18 +35,18 @@ USERID="$(getent passwd "${USER}" | cut -d: -f3)"
                  'rsync' 'repo-clean' 'squashfs-tools' 'curl' 'libusb-compat'
                  'gnupg' 'cdrkit' 'bash-completion')
 
-if [ "${REPO}" == "chakra-live" ] ; then
+if [ "${REPO}" == "live" ] ; then
     INSTALLPKGS+=('syslinux' 'nbd' 'mkinitcpio-nfs-utils')
 fi
 
 # Remote paths
-PKGSOURCE="http://veritasfarm.net/repo"
-BUILDSYS_BASE="git://github.com/abveritas"
+PKGSOURCE="http://kde-os.tk/repo"
+BUILDSYS_BASE="git://github.com/KdeOs"
 GIT_BUILDSYS="${BUILDSYS_BASE}/buildsystem.git"
-PKGS_BASE="https://github.com/abveritas"
-PKGS_BASE_N="git://github.com/abveritas"
-CL_BASE="git@gitorious.org:chakra"
-CL_BASE_N="git://gitorious.org/chakra"
+PKGS_BASE="https://github.com/KdeOs"
+PKGS_BASE_N="git://github.com/KdeOs"
+CL_BASE="https://github.com/KdeOs"
+CL_BASE_N="git://github.com/KdeOs"
 
 # setup local root dir
 PM_CONF="pacman.conf"
@@ -163,7 +163,7 @@ umount_special() {
 check_repos() {
     msg "checking repos"
     unset CHECKTR
-    CHECKTR="$(curl --silent http://veritasfarm.net/packages/check-repos.php)"
+    CHECKTR="$(curl --silent http://kde-os.tk/packages/check-repos.php)"
     if [ "$(echo "${CHECKTR}" | cut -d+ -f1)" = 'ok' ] ; then
 	if [ -z "${REPO}" ] ; then 
 	    newline
@@ -187,7 +187,7 @@ check_repos() {
 	if [ "${REPO_EXISTS}" != "yes" ] ; then
 	    newline
 	    error "the repo «${REPO}» it is unknown"
-	    error "$(echo "${CHECKTR} / chakra-live" | sed 's/ok+/available repos:/g' | sed 's/ testing//g' | sed 's/ unstable//g')"
+	    error "$(echo "${CHECKTR} / live" | sed 's/ok+/available repos:/g' | sed 's/ testing//g' | sed 's/ unstable//g')"
 	    newline
 	    exit 1
 	fi
@@ -210,7 +210,7 @@ create_pacmanconf() {
     msg "creating ${PM_CONF}"
 
     # fetch pacman.conf from git
-    wget -qO "${BASEPATH}/${PM_CONF}" "https://github.com/abveritas/buildsystem/raw/master/skel/pacman.conf"
+    wget -qO "${BASEPATH}/${PM_CONF}" "https://github.com/KdeOs/buildsystem/raw/master/skel/pacman.conf"
 
     sed -ri "s,@arch@,${CARCH}," "${BASEPATH}/${PM_CONF}"
 
@@ -345,7 +345,7 @@ uninstall_chroot() {
     sudo -v
     sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/pkgbuilds" &>/dev/null
     sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/packages" &>/dev/null
-    sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/chakra-live" &>/dev/null
+    sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/live" &>/dev/null
 
     # Repository directory, check for backward compatibility.
     if [ -d "${REPODIR}" ]; then
@@ -463,7 +463,7 @@ create_chroot() {
             sudo cp "${BASEPATH}/${PM_CONF}" "${CHROOT}/etc" &>/dev/null
         fi
         mkdir -p "${CHROOT}/etc/pacman.d" &>/dev/null
-        sudo wget -q -O ${CHROOT}/etc/pacman.d/mirrorlist http://gitorious.org/chakra-packages/core/blobs/raw/testing/pacman-mirrorlist/mirrorlist
+        sudo wget -q -O ${CHROOT}/etc/pacman.d/mirrorlist https://github.com/KdeOs/core/raw/master/pacman-mirrorlist/mirrorlist
         sudo sed -i "s/#Server/Server/g" ${CHROOT}/etc/pacman.d/mirrorlist
         sudo sed -i -e "s/@carch@/${CARCH}/g" ${CHROOT}/etc/pacman.d/mirrorlist
     status_done
@@ -597,15 +597,15 @@ create_buildscripts() {
     sudo chroot "${CHROOT}" su -c "chown -R ${USER}:users /${CHAKRAFOLDER}/${REPO_NAME}" &>/dev/null
     newline
     
-    if [ "${REPO}" == "chakra-live" ] ; then
-	status_start "installing chakra-live"
-	    sudo chroot "${CHROOT}" su -c "cd /${CHAKRAFOLDER}/${REPO_NAME}/chakra-iso && make install" &> /dev/null
+    if [ "${REPO}" == "live" ] ; then
+	status_start "installing live"
+	    sudo chroot "${CHROOT}" su -c "cd /${CHAKRAFOLDER}/${REPO_NAME}/live-iso && make install" &> /dev/null
 	status_done
     fi
 }
 
 preconfigure_buildscripts() {
-    if [ "${REPO_NAME}" != "chakra-live" ] ; then
+    if [ "${REPO_NAME}" != "live" ] ; then
 	newline
 	title "Preconfiguring buildscripts"
 
@@ -729,7 +729,7 @@ configure_buildscripts() {
 	    msg "enter your full name (eg, John Smith):"
 	    read _name
 	    sudo chroot "${CHROOT}" su - "${USER}" -c "git config --global user.name ${_name}" &>/dev/null
-	    msg "and your email (eg, jsmith@chakra-project.org):"
+	    msg "and your email (eg, jsmith@example.org):"
 	    read _email
 	    sudo chroot "${CHROOT}" su - "${USER}" -c "git config --global user.email ${_email}" &>/dev/null
 	fi
@@ -740,7 +740,7 @@ configure_buildscripts() {
 	    read -s _rsync_pass
 	    sed -i -e "s#_rsync_user=\"#_rsync_user=\"${_rsync_user}#" "${BASEPATH}/_buildscripts/conf/user.conf"
 	    sed -i -e "s#_rsync_pass=\"#_rsync_pass=\"${_rsync_pass}#" "${BASEPATH}/_buildscripts/conf/user.conf"
-	    sed -i -e "s#Chakra BuildDrone <http://chakra-project.org>#${_name} <${_email}>#" "${BASEPATH}/_buildscripts/conf/user.conf"
+	    sed -i -e "s#BuildDrone <http://kde-os.tk>#${_name} <${_email}>#" "${BASEPATH}/_buildscripts/conf/user.conf"
 	fi
 	if [ -d "/home/${USER}/.ssh" ] ; then 
 	    cp -rfa "/home/${USER}/.ssh" "${CHROOT}/home/${USER}" &>/dev/null
@@ -750,11 +750,11 @@ configure_buildscripts() {
     status_start "finishing..."
 	mkdir -p "${BASEPATH}/${REPO_NAME}-${CARCH}"
 	ln -s "${CHROOT}" "${BASEPATH}/${REPO_NAME}-${CARCH}/chroot" &>/dev/null
-	if [ "${REPO}" != "chakra-live" ] ; then
+	if [ "${REPO}" != "live" ] ; then
 	    ln -s "${REPODIR}" "${BASEPATH}/${REPO_NAME}-${CARCH}/pkgbuilds" &>/dev/null
 	    ln -s "${REPODIR}/_repo" "${BASEPATH}/${REPO_NAME}-${CARCH}/packages" &>/dev/null
 	else
-	    ln -s "${REPODIR}" "${BASEPATH}/${REPO_NAME}-${CARCH}/chakra-live" &>/dev/null
+	    ln -s "${REPODIR}" "${BASEPATH}/${REPO_NAME}-${CARCH}/live" &>/dev/null
 	fi
 	echo "export _arch=${CARCH}" >> "${CHROOT}/home/${USER}/.bashrc"
 	echo "cd /${CHAKRAFOLDER}/${REPO_NAME}" >> "${CHROOT}/home/${USER}/.bashrc"
@@ -789,7 +789,7 @@ all_done() {
     newline
     title "All done!"
     newline
-    if [ "${REPO_NAME}" != "chakra-live" ] ; then
+    if [ "${REPO_NAME}" != "live" ] ; then
 	msg "Finally open${_W} _buildscripts/${REPO_NAME}-${CARCH}-makepkg.conf"
 	msg "and edit the DLAGENTS, CFLAGS, and CXXFLAGS settings to your"
 	msg "liking and you are ready to build packages."
@@ -811,7 +811,7 @@ all_done() {
 #
 clear
 
-title "Chakra Packager's and ISO creators Chroot Setup Script v${VER}"
+title "Packager's and ISO creators Chroot Setup Script v${VER}"
 
 # ensure we are not running as root
 if [ ${UID} -ne 0 ]; then
@@ -823,8 +823,8 @@ else
     exit 1
 fi
 
-# check the repository name and branch but for chakra-live
-if [ "${REPO}" != "chakra-live" ] ; then
+# check the repository name and branch but for live
+if [ "${REPO}" != "live" ] ; then
     check_repos
     if [ "${BRANCH}" != "master" ] && [ "${BRANCH}" != "testing" ] && [ "${BRANCH}" != "unstable" ] ; then
 	newline
@@ -872,15 +872,15 @@ fi
 
 # as the architechture is optional, check for commiter mode in both last args
 if [ "${IARCH}" == "n" ] || [ "${COMMITMODE}" == "n" ] ; then
-    if [ "${REPO}" == "chakra-live" ] ; then
-	GIT_REPO="${CL_BASE_N}/chakra-live.git"
+    if [ "${REPO}" == "live" ] ; then
+	GIT_REPO="${CL_BASE_N}/live.git"
     else
         GIT_REPO="${PKGS_BASE_N}/${REPO}.git"
     fi
     warning "(n)on-commit enabled, no git write access."
 else
-    if [ "${REPO}" == "chakra-live" ] ; then
-	GIT_REPO="${CL_BASE}/chakra-live.git"
+    if [ "${REPO}" == "live" ] ; then
+	GIT_REPO="${CL_BASE}/live.git"
     else
 	GIT_REPO="${PKGS_BASE}/${REPO}.git"
     fi

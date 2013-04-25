@@ -59,7 +59,7 @@ if [ -d ${_chroot} ] ; then
     if [[ "${_chroot}" = bundles* ]] ; then
 	sed -i -e s,PKGDEST.*,PKGDEST=\"/buildsys/${_chroot_branch}/_temp\",g _buildscripts/${_chroot}-makepkg.conf
     else
-	sed -i -e s,PKGDEST.*,PKGDEST=\"/buildsys/${_chroot_branch}/_repo/local\",g _buildscripts/${_chroot}-makepkg.conf
+	sed -i -e s,PKGDEST.*,PKGDEST=\"/home/${_user}/build\",g _buildscripts/${_chroot}-makepkg.conf
     fi
 
     source _buildscripts/${_chroot}-cfg.conf
@@ -137,3 +137,4 @@ else
     echo " "
     exit 1
 fi
+

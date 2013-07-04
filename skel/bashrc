@@ -98,10 +98,10 @@ rmpkg()
   for i in $*
   do
     pkg=${i%/*}
-    if [[ -n "$(find "/chakra/${_chroot_branch}/_repo/local/" -name "${pkg}-*.pkg.tar.xz" -print -quit)" ]]
+    if [[ -n "$(find "/buildsys/${_chroot_branch}/_repo/local/" -name "${pkg}-*.pkg.tar.xz" -print -quit)" ]]
     then
-      rm "/chakra/${_chroot_branch}/_repo/local/"${pkg}-*.pkg.tar.xz
-      repo-remove "/chakra/${_chroot_branch}/_repo/local/local-${_chroot_branch}.db.tar" $pkg >/dev/null
+      rm "/buildsys/${_chroot_branch}/_repo/local/"${pkg}-*.pkg.tar.xz
+      repo-remove "/buildsys/${_chroot_branch}/_repo/local/local-${_chroot_branch}.db.tar" $pkg >/dev/null
     fi
   done
 }

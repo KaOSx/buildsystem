@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Chakra Update Buildsystem Script
+# Update Buildsystem Script
 #
 
 
@@ -50,20 +50,20 @@ msg "Updating bash helpers and makepkg"
 for _next_repo in $REPOS ; do
     if [[ "$_next_repo" != bundles* ]] ; then
 	for _repo in $REPOS ; do
-	    if [[ ${_repo} != chakra-live* ]] ; then 
+	    if [[ ${_repo} != live* ]] ; then 
 		if [[ ${_repo} == desktop* ]] ; then
-		    cp -f _buildscripts/scripts/makepkg-chakra $_repo/chroot/chakra/${_repo%-*}/makepkg
+		    cp -f _buildscripts/scripts/makepkg $_repo/chroot/buildsys/${_repo%-*}/makepkg
 		else
-		    cp -f _buildscripts/scripts/makepkg $_repo/chroot/chakra/${_repo%-*}/makepkg
+		    cp -f _buildscripts/scripts/makepkg $_repo/chroot/buildsys/${_repo%-*}/makepkg
 		fi
-		if [[ ${_repo} = core* ]] || [[ ${_repo} = platform* ]] ; then
-		    rm -f $_repo/chroot/chakra/${_repo%-*}/fakeuname
-		    cp _buildscripts/bash-helpers/fakeuname $_repo/chroot/chakra/${_repo%-*}/fakeuname
+		if [[ ${_repo} = core* ]] || [[ ${_repo} = main* ]] ; then
+		    rm -f $_repo/chroot/buildsys/${_repo%-*}/fakeuname
+		    cp _buildscripts/bash-helpers/fakeuname $_repo/chroot/buildsys/${_repo%-*}/fakeuname
 		fi
-		rm -f $_repo/chroot/chakra/${_repo%-*}/{pkgrels-,clean-,repoclean-,sync-,show-,upload,remove,move,recreate,unlock,copy-any,get-any}*.sh
-		cp _buildscripts/bash-helpers/{pkgrels-,clean-,repoclean-,sync-down,show-,upload,remove,move,recreate,unlock,copy-any,get-any}*.sh $_repo/chroot/chakra/${_repo%-*}/
-                rm -f $_repo/chroot/chakra/${_repo%-*}/build.sh
-                cp _buildscripts/bash-helpers/build.sh $_repo/chroot/chakra/${_repo%-*}/build.sh
+		rm -f $_repo/chroot/buildsys/${_repo%-*}/{pkgrels-,clean-,repoclean-,sync-,show-,upload,remove,move,recreate,unlock,copy-any,get-any}*.sh
+		cp _buildscripts/bash-helpers/{pkgrels-,clean-,repoclean-,sync-down,show-,upload,remove,move,recreate,unlock,copy-any,get-any}*.sh $_repo/chroot/buildsys/${_repo%-*}/
+                rm -f $_repo/chroot/buildsys/${_repo%-*}/build.sh
+                cp _buildscripts/bash-helpers/build.sh $_repo/chroot/buildsys/${_repo%-*}/build.sh
 	    fi
 	done
     fi

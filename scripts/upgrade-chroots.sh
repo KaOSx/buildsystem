@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Chakra Upgrade Chroots Script
+# Upgrade Chroots Script
 #   loops through each installed chroot, and calls 
 #   pacman -Syu --cachedir _cache-${_arch}
 #

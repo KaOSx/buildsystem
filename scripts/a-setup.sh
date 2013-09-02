@@ -40,13 +40,13 @@ if [ "${REPO}" == "live" ] ; then
 fi
 
 # Remote paths
-PKGSOURCE="http://kde-os.tk/repo"
-BUILDSYS_BASE="git://github.com/KdeOs"
+PKGSOURCE="http://kaosx.us/repo"
+BUILDSYS_BASE="git://github.com/KaOSx"
 GIT_BUILDSYS="${BUILDSYS_BASE}/buildsystem.git"
-PKGS_BASE="https://github.com/KdeOs"
-PKGS_BASE_N="git://github.com/KdeOs"
-CL_BASE="https://github.com/KdeOs"
-CL_BASE_N="git://github.com/KdeOs"
+PKGS_BASE="https://github.com/KaOSx"
+PKGS_BASE_N="git://github.com/KaOSx"
+CL_BASE="https://github.com/KaOSx"
+CL_BASE_N="git://github.com/KaOSx"
 
 # setup local root dir
 PM_CONF="pacman.conf"
@@ -115,11 +115,11 @@ if [ ! -e "/usr/bin/git" ] ; then
     exit
 fi
 
-if [ -e "/etc/KdeOs-release" ] ; then
-    CHAK_VER="$(cat /etc/KdeOs-release)"
-    echo ":: running on KdeOs linux: ${CHAK_VER}"
+if [ -e "/etc/KaOSx-release" ] ; then
+    CHAK_VER="$(cat /etc/KaOSx-release)"
+    echo ":: running on KaOSx linux: ${CHAK_VER}"
     unset CHAK_VER
-    DISTRO="KdeOs"
+    DISTRO="KaOSx"
 else
     echo ":: running on a unsupported linux distro"
     echo ":: (everything could happen from here...)"
@@ -163,7 +163,7 @@ umount_special() {
 check_repos() {
     msg "checking repos"
     unset CHECKTR
-    CHECKTR="$(curl --silent http://kde-os.tk/packages/check-repos.php)"
+    CHECKTR="$(curl --silent http://kaosx.us/packages/check-repos.php)"
     if [ "$(echo "${CHECKTR}" | cut -d+ -f1)" = 'ok' ] ; then
 	if [ -z "${REPO}" ] ; then 
 	    newline
@@ -210,7 +210,7 @@ create_pacmanconf() {
     msg "creating ${PM_CONF}"
 
     # fetch pacman.conf from git
-    wget -qO "${BASEPATH}/${PM_CONF}" "https://github.com/KdeOs/buildsystem/raw/master/skel/pacman.conf"
+    wget -qO "${BASEPATH}/${PM_CONF}" "https://github.com/KaOSx/buildsystem/raw/master/skel/pacman.conf"
 
     sed -ri "s,@arch@,${CARCH}," "${BASEPATH}/${PM_CONF}"
 
@@ -463,7 +463,7 @@ create_chroot() {
             sudo cp "${BASEPATH}/${PM_CONF}" "${CHROOT}/etc" &>/dev/null
         fi
         mkdir -p "${CHROOT}/etc/pacman.d" &>/dev/null
-        sudo wget -q -O ${CHROOT}/etc/pacman.d/mirrorlist https://github.com/KdeOs/core/raw/master/pacman-mirrorlist/mirrorlist
+        sudo wget -q -O ${CHROOT}/etc/pacman.d/mirrorlist https://github.com/KaOSx/core/raw/master/pacman-mirrorlist/mirrorlist
         sudo sed -i "s/#Server/Server/g" ${CHROOT}/etc/pacman.d/mirrorlist
         sudo sed -i -e "s/@carch@/${CARCH}/g" ${CHROOT}/etc/pacman.d/mirrorlist
     status_done
@@ -740,7 +740,7 @@ configure_buildscripts() {
 	    read -s _rsync_pass
 	    sed -i -e "s#_rsync_user=\"#_rsync_user=\"${_rsync_user}#" "${BASEPATH}/_buildscripts/conf/user.conf"
 	    sed -i -e "s#_rsync_pass=\"#_rsync_pass=\"${_rsync_pass}#" "${BASEPATH}/_buildscripts/conf/user.conf"
-	    sed -i -e "s#BuildDrone <http://kde-os.tk>#${_name} <${_email}>#" "${BASEPATH}/_buildscripts/conf/user.conf"
+	    sed -i -e "s#BuildDrone <http://kaosx.us>#${_name} <${_email}>#" "${BASEPATH}/_buildscripts/conf/user.conf"
 	fi
 	if [ -d "/home/${USER}/.ssh" ] ; then 
 	    cp -rfa "/home/${USER}/.ssh" "${CHROOT}/home/${USER}" &>/dev/null

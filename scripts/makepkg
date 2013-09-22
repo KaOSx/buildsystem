@@ -1928,6 +1928,8 @@ create_package() {
 			rm -f "${pkg_file/$PKGDEST/$startdir}.sig"
 			ln -s "$pkg_file.sig" "${pkg_file/$PKGDEST/$startdir}.sig"
 		fi
+		msg2 "Updating build repository"
+		repo-add "$PKGDEST/build.db.tar.gz" "$pkg_file" > /dev/null
 	fi
 
 	if (( ret )); then

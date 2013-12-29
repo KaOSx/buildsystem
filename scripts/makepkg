@@ -1930,6 +1930,7 @@ create_package() {
 		fi
 		msg2 "Updating build repository"
 		repo-add "$PKGDEST/build.db.tar.gz" "$pkg_file" > /dev/null
+		repo-add -f "$PKGDEST/build.files.tar.gz" "$pkg_file" > /dev/null
 	fi
 
 	if (( ret )); then

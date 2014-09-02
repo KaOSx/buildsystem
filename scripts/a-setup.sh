@@ -36,7 +36,7 @@ USERID="$(getent passwd "${USER}" | cut -d: -f3)"
                  'gnupg' 'cdrkit' 'bash-completion')
 
 if [ "${REPO}" == "live" ] ; then
-    INSTALLPKGS+=('syslinux' 'nbd' 'mkinitcpio-nfs-utils')
+    INSTALLPKGS+=('syslinux' 'nbd' 'mkinitcpio-nfs-utils' 'dosfstools')
 fi
 
 # Remote paths

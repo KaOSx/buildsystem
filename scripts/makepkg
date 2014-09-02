@@ -1814,6 +1814,8 @@ write_pkginfo() {
 	printf "packager = %s\n" "$packager"
 	printf "size = %s\n" "$size"
 	printf "arch = %s\n" "$pkgarch"
+	printf "gitrepo = %s\n" "${current_repo}"
+        printf "gitfolder = %s\n" "${startdir##*/}"
 
 	mapfile -t provides < <(find_libprovides)
 	mapfile -t depends < <(find_libdepends)

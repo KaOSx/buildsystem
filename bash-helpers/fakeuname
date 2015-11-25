@@ -2,7 +2,7 @@
 #
 #  Fakeuname - fakes the uname system value
 #
-#  usage example:  ../fakeuname -r 2.6.33-CHAKRA ../makepkg
+#  usage example:  ../fakeuname -r 4.3.0 ../makepkg
 #
 
 uname=$(which uname)

@@ -1,12 +1,6 @@
 #!/bin/bash
 #
-# a-Setup.sh, an automatic buildsystem forked from Chakra GNU/Linux
-#
-# Copyright (c) 2010-2013 - Originally developed by Jan Mette
-#
-#                       Contributors:
-#
-#                       Chakra GNU/Linux developers
+# a-Setup.sh, an automatic buildsystem 
 #
 #
 # GPL

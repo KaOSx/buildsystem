@@ -3,7 +3,7 @@
 #   makepkg - make packages compatible for use with pacman
 #   Generated from makepkg.sh.in; do not edit by hand.
 #
-#   Copyright (c) 2006-2013 Pacman Development Team <pacman-dev@archlinux.org>
+#   Copyright (c) 2006-2016 Pacman Development Team <pacman-dev@archlinux.org>
 #   Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
 #   Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
 #   Copyright (c) 2006 by Miklos Vajna <vmiklos@frugalware.org>
@@ -1932,7 +1932,6 @@ create_package() {
 		fi
 		msg2 "Updating build repository"
 		repo-add "$PKGDEST/build.db.tar.gz" "$pkg_file" > /dev/null
-		repo-add -f "$PKGDEST/build.files.tar.gz" "$pkg_file" > /dev/null
 	fi
 
 	if (( ret )); then

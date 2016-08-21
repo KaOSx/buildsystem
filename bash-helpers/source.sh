@@ -70,16 +70,13 @@ check_configs
 load_configs
 
 # we take the repo name + the job/stage to reconstruct the variable name
-# in $repo_pkgs.cfg and echo its contents... damn, eval is evil ;)
+# in $repo_pkgs.cfg and echo its contents... 
 whattodo=($(eval echo "\${_build_${_current_repo}_${_args}[@]}"))
 
 time build_it
 
 if [ -z "$BROKEN_PKGS" ] ; then
     title2 "All done"
-else
-    title2 "All done"
-    title2 "SOME PACKAGES WERE NOT BUILT: $BROKEN_PKGS"
 fi
 
 newline

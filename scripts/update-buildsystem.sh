@@ -40,7 +40,7 @@ for _repo in $REPOS ; do
     rm -f $_repo/chroot/home/$(whoami)/.bashrc
     cp _buildscripts/skel/bashrc $_repo/chroot/home/$(whoami)/.bashrc
     echo "export _arch=$(echo $_repo | sed "s/-testing//" | sed "s/-unstable//" | cut -d- -f2)" >> $_repo/chroot/home/$(whoami)/.bashrc
-    echo "cd /chakra/$(echo $_repo | sed "s/-x86_64//" | sed "s/-i686//")" >> $_repo/chroot/home/$(whoami)/.bashrc
+    echo "cd /kaos/$(echo $_repo | sed "s/-x86_64//" | sed "s/-i686//")" >> $_repo/chroot/home/$(whoami)/.bashrc
     echo "ls" >> $_repo/chroot/home/$(whoami)/.bashrc
     echo 'echo " "' >> $_repo/chroot/home/$(whoami)/.bashrc
 done

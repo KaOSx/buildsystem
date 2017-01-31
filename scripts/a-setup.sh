@@ -6,7 +6,7 @@
 # GPL
 
 # version
-VER="0.8.0"
+VER="0.8.1"
 
 # local root name (safe to change)
 BASENAME="buildroot"
@@ -29,12 +29,12 @@ USERID="$(getent passwd "${USER}" | cut -d: -f3)"
                  'rsync' 'repo-clean' 'squashfs-tools' 'curl' 'libusb-compat'
                  'gnupg' 'cdrkit' 'bash-completion')
 
-if [ "${REPO}" == "live" ] ; then
-    INSTALLPKGS+=('syslinux' 'nbd' 'mkinitcpio-nfs-utils' 'dosfstools')
+if [ "${REPO}" == "live-uefi" ] ; then
+    INSTALLPKGS+=('syslinux' 'nbd' 'mkinitcpio-nfs-utils' 'libisoburn')
 fi
 
 # Remote paths
-PKGSOURCE="http://kaosx.us/repo"
+PKGSOURCE="http://kaosx.tk/repo"
 BUILDSYS_BASE="git://github.com/KaOSx"
 GIT_BUILDSYS="${BUILDSYS_BASE}/buildsystem.git"
 PKGS_BASE="https://github.com/KaOSx"
@@ -110,10 +110,10 @@ if [ ! -e "/usr/bin/git" ] ; then
 fi
 
 if [ -e "/etc/KaOSx-release" ] ; then
-    CHAK_VER="$(cat /etc/KaOSx-release)"
-    echo ":: running on KaOSx linux: ${CHAK_VER}"
-    unset CHAK_VER
-    DISTRO="KaOSx"
+    KAOS_VER="$(cat /etc/KaOS-release)"
+    echo ":: running on KaOS linux: ${KAOS_VER}"
+    unset KAOS_VER
+    DISTRO="KaOS"
 else
     echo ":: running on a unsupported linux distro"
     echo ":: (everything could happen from here...)"
@@ -157,7 +157,7 @@ umount_special() {
 check_repos() {
     msg "checking repos"
     unset CHECKTR
-    CHECKTR="$(curl --silent http://kaosx.us/packages/check-repos.php)"
+    CHECKTR="$(curl --silent http://kaosx.tk/packages/check-repos.php)"
     if [ "$(echo "${CHECKTR}" | cut -d+ -f1)" = 'ok' ] ; then
 	if [ -z "${REPO}" ] ; then 
 	    newline
@@ -181,7 +181,7 @@ check_repos() {
 	if [ "${REPO_EXISTS}" != "yes" ] ; then
 	    newline
 	    error "the repo «${REPO}» it is unknown"
-	    error "$(echo "${CHECKTR} / live" | sed 's/ok+/available repos:/g' | sed 's/ testing//g' | sed 's/ unstable//g')"
+	    error "$(echo "${CHECKTR} / live-uefi" | sed 's/ok+/available repos:/g' | sed 's/ testing//g' | sed 's/ unstable//g')"
 	    newline
 	    exit 1
 	fi
@@ -339,7 +339,7 @@ uninstall_chroot() {
     sudo -v
     sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/pkgbuilds" &>/dev/null
     sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/packages" &>/dev/null
-    sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/live" &>/dev/null
+    sudo rm -rf -v "${BASEPATH}/${REPO_NAME}-${CARCH}/live-uefi" &>/dev/null
 
     # Repository directory, check for backward compatibility.
     if [ -d "${REPODIR}" ]; then
@@ -519,9 +519,9 @@ create_buildscripts() {
     title "Installing buildscripts"
 
     status_start "creating needed directories"
-        sudo chroot "${CHROOT}" su "${USER}" -c "mkdir -p /${CHAKRAFOLDER}/${REPO_NAME}" &>/dev/null
-        sudo mkdir -p "${CHAKRADIR}"
-        sudo chown "${USER}:users" "${CHAKRADIR}"
+        sudo chroot "${CHROOT}" su "${USER}" -c "mkdir -p /${KAOSFOLDER}/${REPO_NAME}" &>/dev/null
+        sudo mkdir -p "${KAOSDIR}"
+        sudo chown "${USER}:users" "${KAOSDIR}"
         sudo chown "${USER}:users" "${REPODIR}"
     status_done
 
@@ -588,18 +588,18 @@ create_buildscripts() {
 	fi
     fi
 
-    sudo chroot "${CHROOT}" su -c "chown -R ${USER}:users /${CHAKRAFOLDER}/${REPO_NAME}" &>/dev/null
+    sudo chroot "${CHROOT}" su -c "chown -R ${USER}:users /${KAOSFOLDER}/${REPO_NAME}" &>/dev/null
     newline
     
-    if [ "${REPO}" == "live" ] ; then
-	status_start "installing live"
-	    sudo chroot "${CHROOT}" su -c "cd /${CHAKRAFOLDER}/${REPO_NAME}/live-iso && make install" &> /dev/null
+    if [ "${REPO}" == "live-uefi" ] ; then
+	status_start "installing live-uefi"
+	    sudo chroot "${CHROOT}" su -c "cd /${KAOSFOLDER}/${REPO_NAME}/live-uefi-iso && make install" &> /dev/null
 	status_done
     fi
 }
 
 preconfigure_buildscripts() {
-    if [ "${REPO_NAME}" != "live" ] ; then
+    if [ "${REPO_NAME}" != "live-uefi" ] ; then
 	newline
 	title "Preconfiguring buildscripts"
 
@@ -627,7 +627,7 @@ preconfigure_buildscripts() {
    
 	status_start "installing makepkg"
 	    if [[ "${REPO_NAME}" == desktop* ]] ; then
-		cp -f "${BASEPATH}/_buildscripts/scripts/makepkg-chakra" "${REPODIR}/makepkg" &>/dev/null
+		cp -f "${BASEPATH}/_buildscripts/scripts/makepkg-sys" "${REPODIR}/makepkg" &>/dev/null
 	    else
 		cp -f "${BASEPATH}/_buildscripts/scripts/makepkg" "${REPODIR}/makepkg" &>/dev/null
 	    fi
@@ -734,7 +734,7 @@ configure_buildscripts() {
 	    read -s _rsync_pass
 	    sed -i -e "s#_rsync_user=\"#_rsync_user=\"${_rsync_user}#" "${BASEPATH}/_buildscripts/conf/user.conf"
 	    sed -i -e "s#_rsync_pass=\"#_rsync_pass=\"${_rsync_pass}#" "${BASEPATH}/_buildscripts/conf/user.conf"
-	    sed -i -e "s#BuildDrone <http://kaosx.us>#${_name} <${_email}>#" "${BASEPATH}/_buildscripts/conf/user.conf"
+	    sed -i -e "s#BuildDrone <https://kaosx.us>#${_name} <${_email}>#" "${BASEPATH}/_buildscripts/conf/user.conf"
 	fi
 	if [ -d "/home/${USER}/.ssh" ] ; then 
 	    cp -rfa "/home/${USER}/.ssh" "${CHROOT}/home/${USER}" &>/dev/null
@@ -744,14 +744,14 @@ configure_buildscripts() {
     status_start "finishing..."
 	mkdir -p "${BASEPATH}/${REPO_NAME}-${CARCH}"
 	ln -s "${CHROOT}" "${BASEPATH}/${REPO_NAME}-${CARCH}/chroot" &>/dev/null
-	if [ "${REPO}" != "live" ] ; then
+	if [ "${REPO}" != "live-uefi" ] ; then
 	    ln -s "${REPODIR}" "${BASEPATH}/${REPO_NAME}-${CARCH}/pkgbuilds" &>/dev/null
 	    ln -s "${REPODIR}/_repo" "${BASEPATH}/${REPO_NAME}-${CARCH}/packages" &>/dev/null
 	else
-	    ln -s "${REPODIR}" "${BASEPATH}/${REPO_NAME}-${CARCH}/live" &>/dev/null
+	    ln -s "${REPODIR}" "${BASEPATH}/${REPO_NAME}-${CARCH}/live-uefi" &>/dev/null
 	fi
 	echo "export _arch=${CARCH}" >> "${CHROOT}/home/${USER}/.bashrc"
-	echo "cd /${CHAKRAFOLDER}/${REPO_NAME}" >> "${CHROOT}/home/${USER}/.bashrc"
+	echo "cd /${KAOSFOLDER}/${REPO_NAME}" >> "${CHROOT}/home/${USER}/.bashrc"
 	echo "ls" >> "${CHROOT}/home/${USER}/.bashrc"
 	echo "echo" >> "${CHROOT}/home/${USER}/.bashrc"
         rm -rf "${BASEPATH}/${PM_CONF}"
@@ -783,7 +783,7 @@ all_done() {
     newline
     title "All done!"
     newline
-    if [ "${REPO_NAME}" != "live" ] ; then
+    if [ "${REPO_NAME}" != "live-uefi" ] ; then
 	msg "Finally open${_W} _buildscripts/${REPO_NAME}-${CARCH}-makepkg.conf"
 	msg "and edit the DLAGENTS, CFLAGS, and CXXFLAGS settings to your"
 	msg "liking and you are ready to build packages."
@@ -817,8 +817,8 @@ else
     exit 1
 fi
 
-# check the repository name and branch but for live
-if [ "${REPO}" != "live" ] ; then
+# check the repository name and branch but for live-uefi
+if [ "${REPO}" != "live-uefi" ] ; then
     check_repos
     if [ "${BRANCH}" != "master" ] && [ "${BRANCH}" != "testing" ] && [ "${BRANCH}" != "unstable" ] ; then
 	newline
@@ -866,15 +866,15 @@ fi
 
 # as the architechture is optional, check for commiter mode in both last args
 if [ "${IARCH}" == "n" ] || [ "${COMMITMODE}" == "n" ] ; then
-    if [ "${REPO}" == "live" ] ; then
-	GIT_REPO="${CL_BASE_N}/live.git"
+    if [ "${REPO}" == "live-uefi" ] ; then
+	GIT_REPO="${CL_BASE_N}/live-uefi.git"
     else
         GIT_REPO="${PKGS_BASE_N}/${REPO}.git"
     fi
     warning "(n)on-commit enabled, no git write access."
 else
-    if [ "${REPO}" == "live" ] ; then
-	GIT_REPO="${CL_BASE}/live.git"
+    if [ "${REPO}" == "live-uefi" ] ; then
+	GIT_REPO="${CL_BASE}/live-uefi.git"
     else
 	GIT_REPO="${PKGS_BASE}/${REPO}.git"
     fi
@@ -888,9 +888,9 @@ else
     REPO_NAME="${REPO}-${BRANCH}"
 fi
 CHROOT="${BASEPATH}/_chroots/$BRANCH-${ARCH}"
-CHAKRAFOLDER="buildsys"
-CHAKRADIR="${CHROOT}/${CHAKRAFOLDER}"
-REPODIR="${CHAKRADIR}/${REPO_NAME}"
+KAOSFOLDER="buildsys"
+KAOSDIR="${CHROOT}/${KAOSFOLDER}"
+REPODIR="${KAOSDIR}/${REPO_NAME}"
 
 newline
 warning "Root                 : ${BASEPATH}"

@@ -26,7 +26,7 @@ USERID="$(getent passwd "${USER}" | cut -d: -f3)"
 
 # Pkgs to install
     INSTALLPKGS=('base' 'base-devel' 'cmake' 'openssh' 'git' 'sudo' 'boost' 'vim'
-                 'rsync' 'repo-clean' 'squashfs-tools' 'curl' 'libusb-compat'
+                 'rsync' 'squashfs-tools' 'curl' 'libusb'
                  'gnupg' 'cdrkit' 'bash-completion')
 
 if [ "${REPO}" == "live-uefi" ] ; then

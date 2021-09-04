@@ -1,9 +1,8 @@
 #!/bin/bash
 #
 #   makepkg - make packages compatible for use with pacman
-#   Generated from makepkg.sh.in; do not edit by hand.
 #
-#   Copyright (c) 2006-2019 Pacman Development Team <pacman-dev@archlinux.org>
+#   Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
 #   Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
 #   Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
 #   Copyright (c) 2006 by Miklos Vajna <vmiklos@frugalware.org>
@@ -41,7 +40,7 @@ unset CDPATH
 # Ensure GREP_OPTIONS doesn't screw with our grep calls
 unset GREP_OPTIONS
 
-declare -r makepkg_version='5.2.1'
+declare -r makepkg_version='6.0.1'
 # KaOS buildsys confdir
 declare -r confdir='../_buildscripts'
 declare -r BUILDSCRIPT='PKGBUILD'
@@ -68,7 +67,7 @@ splitpkg_overrides=('pkgdesc' 'arch' 'url' 'license' 'groups' 'depends'
                     'options' 'install' 'changelog')
 readonly -a build_options splitpkg_overrides
 
-known_hash_algos=('md5' 'sha1' 'sha224' 'sha256' 'sha384' 'sha512' 'whirlpool')
+known_hash_algos=('md5' 'sha1' 'sha224' 'sha256' 'sha384' 'sha512' 'b2' 'whirlpool')
 ###############################################################################
 
 # Options
@@ -222,13 +221,15 @@ update_pkgver() {
 	fi
 
 	if [[ -n $newpkgver && $newpkgver != "$pkgver" ]]; then
-		if [[ -f $BUILDFILE && -w $BUILDFILE ]]; then
-			if ! /usr/bin/sed --follow-symlinks -i "s:^pkgver=[^ ]*:pkgver=$newpkgver:" "$BUILDFILE"; then
+		if [[ -w $BUILDFILE ]]; then
+			mapfile -t buildfile < "$BUILDFILE"
+			buildfile=("${buildfile[@]/#pkgver=*([^ ])/pkgver=$newpkgver}")
+			buildfile=("${buildfile[@]/#pkgrel=*([^ ])/pkgrel=1}")
+			if ! printf '%s\n' "${buildfile[@]}" > "$BUILDFILE"; then
 				error "$(gettext "Failed to update %s from %s to %s")" \
 						"pkgver" "$pkgver" "$newpkgver"
 				exit $E_PKGBUILD_ERROR
 			fi
-			/usr/bin/sed --follow-symlinks -i "s:^pkgrel=[^ ]*:pkgrel=1:" "$BUILDFILE"
 			source_safe "$BUILDFILE"
 			local fullver=$(get_full_version)
 			msg "$(gettext "Updated version: %s")" "$pkgbase $fullver"
@@ -242,20 +243,27 @@ update_pkgver() {
 # Print 'source not found' error message and exit makepkg
 missing_source_file() {
 	error "$(gettext "Unable to find source file %s.")" "$(get_filename "$1")"
-	plain "$(gettext "Aborting...")"
+	plainerr "$(gettext "Aborting...")"
 	exit $E_MISSING_FILE
 }
 
 run_pacman() {
-	local cmd
+	local cmd cmdescape
 	if [[ $1 = -@(T|Q)*([[:alpha:]]) ]]; then
 		cmd=("$PACMAN_PATH" "$@")
 	else
 		cmd=("$PACMAN_PATH" "${PACMAN_OPTS[@]}" "$@")
-		if type -p sudo >/dev/null; then
+		cmdescape="$(printf '%q ' "${cmd[@]}")"
+		if (( ${#PACMAN_AUTH[@]} )); then
+			if in_array '%c' "${PACMAN_AUTH[@]}"; then
+				cmd=("${PACMAN_AUTH[@]/\%c/$cmdescape}")
+			else
+				cmd=("${PACMAN_AUTH[@]}" "${cmd[@]}")
+			fi
+		elif type -p sudo >/dev/null; then
 			cmd=(sudo "${cmd[@]}")
 		else
-			cmd=(su root -c "$(printf '%q ' "${cmd[@]}")")
+			cmd=(su root -c "$cmdescape")
 		fi
 		local lockfile="$(pacman-conf DBPath)/db.lck"
 		while [[ -f $lockfile ]]; do
@@ -377,7 +385,7 @@ error_function() {
 	# first exit all subshells, then print the error
 	if (( ! BASH_SUBSHELL )); then
 		error "$(gettext "A failure occurred in %s().")" "$1"
-		plain "$(gettext "Aborting...")"
+		plainerr "$(gettext "Aborting...")"
 	fi
 	exit $E_USER_FUNCTION_FAILED
 }
@@ -544,12 +552,13 @@ find_libdepends() {
 
 
 find_libprovides() {
-	local p libprovides missing
+	local p versioned_provides libprovides missing
 	for p in "${provides[@]}"; do
 		missing=0
+		versioned_provides=()
 		case "$p" in
 			*.so)
-				mapfile -t filename < <(find "$pkgdir" -type f -name $p\*)
+				mapfile -t filename < <(find "$pkgdir" -type f -name $p\* | LC_ALL=C sort)
 				if [[ $filename ]]; then
 					# packages may provide multiple versions of the same library
 					for fn in "${filename[@]}"; do
@@ -559,7 +568,6 @@ find_libprovides() {
 							local sofile=$(LC_ALL=C readelf -d "$fn" 2>/dev/null | sed -n 's/.*Library soname: \[\(.*\)\].*/\1/p')
 							if [[ -z "$sofile" ]]; then
 								warning "$(gettext "Library listed in %s is not versioned: %s")" "'provides'" "$p"
-								libprovides+=("$p")
 								continue
 							fi
 
@@ -569,24 +577,24 @@ find_libprovides() {
 							# extract the library major version
 							local soversion="${sofile##*\.so\.}"
 
-							libprovides+=("${p}=${soversion}-${soarch}")
+							versioned_provides+=("${p}=${soversion}-${soarch}")
 						else
 							warning "$(gettext "Library listed in %s is not a shared object: %s")" "'provides'" "$p"
-							libprovides+=("$p")
 						fi
 					done
 				else
-					libprovides+=("$p")
 					missing=1
 				fi
-				;;
-			*)
-				libprovides+=("$p")
 				;;
 		esac
 
 		if (( missing )); then
 			warning "$(gettext "Cannot find library listed in %s: %s")" "'provides'" "$p"
+		fi
+		if (( ${#versioned_provides[@]} > 0 )); then
+			libprovides+=("${versioned_provides[@]}")
+		else
+			libprovides+=("$p")
 		fi
 	done
 
@@ -633,7 +641,7 @@ write_pkginfo() {
 	write_kv_pair "arch" "$pkgarch"
 	#KaOS Buildsys
 	write_kv_pair "gitrepo" "${current_repo}"
-    write_kv_pair "gitfolder" "${startdir##*/}"
+	write_kv_pair "gitfolder" "${startdir##*/}"
 
 	mapfile -t provides < <(find_libprovides)
 	mapfile -t depends < <(find_libdepends)
@@ -651,7 +659,7 @@ write_pkginfo() {
 }
 
 write_buildinfo() {
-	write_kv_pair "format" "1"
+	write_kv_pair "format" "2"
 
 	write_kv_pair "pkgname" "$pkgname"
 	write_kv_pair "pkgbase" "$pkgbase"
@@ -668,6 +676,9 @@ write_buildinfo() {
 	write_kv_pair "packager" "${PACKAGER}"
 	write_kv_pair "builddate" "${SOURCE_DATE_EPOCH}"
 	write_kv_pair "builddir"  "${BUILDDIR}"
+	write_kv_pair "startdir"  "${startdir}"
+	write_kv_pair "buildtool" "${BUILDTOOL:-makepkg}"
+	write_kv_pair "buildtoolver" "${BUILDTOOLVER:-$makepkg_version}"
 	write_kv_pair "buildenv" "${BUILDENV[@]}"
 	write_kv_pair "options" "${OPTIONS[@]}"
 
@@ -698,7 +709,7 @@ create_package() {
 
 	if [[ ! -d $pkgdir ]]; then
 		error "$(gettext "Missing %s directory.")" "\$pkgdir/"
-		plain "$(gettext "Aborting...")"
+		plainerr "$(gettext "Aborting...")"
 		exit $E_MISSING_PKGDIR
 	fi
 
@@ -747,8 +758,8 @@ create_package() {
 	shopt -s -o pipefail
 	list_package_files | LANG=C bsdtar --no-fflags -cnf - --null --files-from - |
 		compress_as "$PKGEXT" > "${pkg_file}" || ret=$?
-		
-    # KaOS Buildsys
+
+	# KaOS Buildsys
     msg2 "Updating build repository"
     repo-add "$PKGDEST/build.db.tar.gz" "${pkg_file}" > /dev/null
 
@@ -812,13 +823,16 @@ create_srcpackage() {
 		fi
 	done
 
-	local i
+	# set pkgname the same way we do for running package(), this way we get
+	# the right value in extract_function_variable
+	local pkgname_backup=(${pkgname[@]})
+	local i pkgname
 	for i in 'changelog' 'install'; do
 		local file files
 
 		[[ ${!i} ]] && files+=("${!i}")
-		for name in "${pkgname[@]}"; do
-			if extract_function_variable "package_$name" "$i" 0 file; then
+		for pkgname in "${pkgname_backup[@]}"; do
+			if extract_function_variable "package_$pkgname" "$i" 0 file; then
 				files+=("$file")
 			fi
 		done
@@ -830,6 +844,7 @@ create_srcpackage() {
 			fi
 		done
 	done
+	pkgname=(${pkgname_backup[@]})
 
 	local fullver=$(get_full_version)
 	local pkg_file="$SRCPKGDEST/${pkgbase}-${fullver}${SRCEXT}"
@@ -886,6 +901,7 @@ install_package() {
 }
 
 check_build_status() {
+	local fullver pkgarch allpkgbuilt somepkgbuilt
 	if (( ! SPLITPKG )); then
 		fullver=$(get_full_version)
 		pkgarch=$(get_pkg_arch)
@@ -928,7 +944,6 @@ check_build_status() {
 				exit $E_ALREADY_BUILT
 			fi
 		fi
-		unset allpkgbuilt somepkgbuilt
 	fi
 }
 
@@ -1029,7 +1044,7 @@ usage() {
 
 version() {
 	printf "makepkg (pacman) %s\n" "$makepkg_version"
-	printf -- "Copyright (c) 2006-2019 Pacman Development Team <pacman-dev@archlinux.org>.\n"
+	printf -- "Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>.\n"
 	printf -- "Copyright (C) 2002-2006 Judd Vinet <jvinet@zeroflux.org>.\n"
 	printf '\n'
 	printf -- "$(gettext "\
@@ -1171,23 +1186,23 @@ lint_config || exit $E_CONFIG_ERROR
 
 # check that all settings directories are user-writable
 if ! ensure_writable_dir "BUILDDIR" "$BUILDDIR"; then
-	plain "$(gettext "Aborting...")"
+	plainerr "$(gettext "Aborting...")"
 	exit $E_FS_PERMISSIONS
 fi
 
 if (( ! (NOBUILD || GENINTEG) )) && ! ensure_writable_dir "PKGDEST" "$PKGDEST"; then
-	plain "$(gettext "Aborting...")"
+	plainerr "$(gettext "Aborting...")"
 	exit $E_FS_PERMISSIONS
 fi
 
 if ! ensure_writable_dir "SRCDEST" "$SRCDEST" ; then
-	plain "$(gettext "Aborting...")"
+	plainerr "$(gettext "Aborting...")"
 	exit $E_FS_PERMISSIONS
 fi
 
 if (( SOURCEONLY )); then
 	if ! ensure_writable_dir "SRCPKGDEST" "$SRCPKGDEST"; then
-		plain "$(gettext "Aborting...")"
+		plainerr "$(gettext "Aborting...")"
 		exit $E_FS_PERMISSIONS
 	fi
 
@@ -1197,7 +1212,7 @@ if (( SOURCEONLY )); then
 fi
 
 if (( LOGGING )) && ! ensure_writable_dir "LOGDEST" "$LOGDEST"; then
-	plain "$(gettext "Aborting...")"
+	plainerr "$(gettext "Aborting...")"
 	exit $E_FS_PERMISSIONS
 fi
 
@@ -1219,8 +1234,8 @@ unset "${known_hash_algos[@]/%/sums}"
 unset -f pkgver prepare build check package "${!package_@}"
 unset "${!makedepends_@}" "${!depends_@}" "${!source_@}" "${!checkdepends_@}"
 unset "${!optdepends_@}" "${!conflicts_@}" "${!provides_@}" "${!replaces_@}"
-unset "${!md5sums_@}" "${!sha1sums_@}" "${!sha224sums_@}" "${!sha256sums_@}"
-unset "${!sha384sums_@}" "${!sha512sums_@}" "${!b2sums_@}"
+unset "${!cksums_@}" "${!md5sums_@}" "${!sha1sums_@}" "${!sha224sums_@}"
+unset "${!sha256sums_@}" "${!sha384sums_@}" "${!sha512sums_@}" "${!b2sums_@}"
 
 BUILDFILE=${BUILDFILE:-$BUILDSCRIPT}
 if [[ ! -f $BUILDFILE ]]; then
@@ -1310,7 +1325,7 @@ fi
 # check if gpg signature is to be created and if signing key is valid
 if { [[ -z $SIGNPKG ]] && check_buildenv "sign" "y"; } || [[ $SIGNPKG == 'y' ]]; then
 	SIGNPKG='y'
-	if ! gpg --list-key ${GPGKEY} &>/dev/null; then
+	if ! gpg --list-secret-key ${GPGKEY:+"$GPGKEY"} &>/dev/null; then
 		if [[ ! -z $GPGKEY ]]; then
 			error "$(gettext "The key %s does not exist in your keyring.")" "${GPGKEY}"
 		else
@@ -1384,7 +1399,7 @@ if (( SOURCEONLY )); then
 
 	if [[ $SIGNPKG = 'y' ]]; then
 		msg "$(gettext "Signing package...")"
-		create_signature "$SRCPKGDEST/${pkgbase}-${fullver}${SRCEXT}"
+		create_signature "$SRCPKGDEST/${pkgbase}-$(get_full_version)${SRCEXT}"
 	fi
 
 	msg "$(gettext "Source package created: %s")" "$pkgbase ($(date +%c))"

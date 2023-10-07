@@ -35,9 +35,9 @@ export HISTCONTROL=ignoreboth   # ingore duplicates and spaces (ignoreboth, igno
 #
 
 # ls
-alias ls='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
-alias ll='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
-alias la='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias ls='ls --group-directories-first --time-style=long-iso --color=auto -F'
+alias ll='ls -l --group-directories-first --time-style=long-iso --color=auto -F'
+alias la='ls -la --group-directories-first --time-style=long-iso --color=auto -F'
 alias l1='ls -1 --group-directories-first --color=auto -F'
 alias l='ls'
 
